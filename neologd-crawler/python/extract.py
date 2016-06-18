@@ -37,10 +37,25 @@ def ff11_wiki_extractor(soup):
     return (word, yomi)
 
 
+def aozora_extractor(soup):
+    """
+    :param soup:
+    :return: (word, yomi)
+    """
+    if not soup.find('table', summary='タイトルデータ'):
+        word = soup.find('table', summary='作家データ').find_all('td')[1].string
+        yomi = soup.find('table', summary='作家データ').find_all('td')[3].string
+    else:
+        word = soup.find('table', summary='タイトルデータ').find_all('td')[1].string
+        yomi = soup.find('table', summary='タイトルデータ').find_all('td')[3].string
+    return (word, yomi)
+
+
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
     "www.what-myhome.net": what_my_home_net_extractor,
-    "wiki.ffo.jp": ff11_wiki_extractor
+    "wiki.ffo.jp": ff11_wiki_extractor,
+    "www.aozora.gr.jp": aozora_extractor
 }
 # ======= PATTERN IS END =======
 
