@@ -86,8 +86,13 @@ class NeologdCrawlerScheduler(val seedURL: String, val redisHost: String, val re
         }
 
       case id if id == extractExecutor.getExecutorId.getValue =>
-        val result = Json.parse(jsonString).as[ExtractResult]
-        log.info(s"Get word [$result]")
+        val result = try {
+          Json.parse(jsonString).as[ExtractResult]
+        } catch {
+          case _ => ""
+        }
+          log.info(s"Get word [$result]")
+        }
     }
   }
 
