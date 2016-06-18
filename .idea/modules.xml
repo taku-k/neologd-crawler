@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/line-intern.iml" filepath="$PROJECT_DIR$/.idea/line-intern.iml" />
+      <module fileurl="file://$PROJECT_DIR$/neologd-crawler/.idea/modules/neologd-crawler.iml" filepath="$PROJECT_DIR$/neologd-crawler/.idea/modules/neologd-crawler.iml" />
+      <module fileurl="file://$PROJECT_DIR$/neologd-crawler/.idea/modules/neologd-crawler-build.iml" filepath="$PROJECT_DIR$/neologd-crawler/.idea/modules/neologd-crawler-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/neologd-crawler/python/neologd-crawler-python.iml" filepath="$PROJECT_DIR$/neologd-crawler/python/neologd-crawler-python.iml" />
+      <module fileurl="file://$PROJECT_DIR$/python/root-python.iml" filepath="$PROJECT_DIR$/python/root-python.iml" />
+    </modules>
+  </component>
+</project>
