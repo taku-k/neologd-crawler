@@ -22,9 +22,25 @@ def what_my_home_net_extractor(soup):
     return (word, yomi)
 
 
+def ff11_wiki_extractor(soup):
+    """For wiki.ffo.jp
+
+    :param soup: BeatutifulSoup object
+    :return: (word, yomi)
+    >>> url = 'http://wiki.ffo.jp/html/22326.html'
+    >>> soup = BeautifulSoup(urllib.urlopen(url).read())
+    >>> ff11_wiki_extractor(soup)
+    (u'\u30a2\u30a4\u30e9\u30d0\u30b0\u30ca\u30a6', u'\u3042\u3044\u3089\u3070\u3050\u306a\u3046')
+    """
+    word = soup.find('div', class_='title').text.split('(')[0]
+    yomi = soup.find('span', class_='yomi').string[1:-1].split('/')[0]
+    return (word, yomi)
+
+
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
-    "www.what-myhome.net": what_my_home_net_extractor
+    "www.what-myhome.net": what_my_home_net_extractor,
+    "wiki.ffo.jp": ff11_wiki_extractor
 }
 # ======= PATTERN IS END =======
 

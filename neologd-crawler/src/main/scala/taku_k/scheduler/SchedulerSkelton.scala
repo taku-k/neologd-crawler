@@ -23,6 +23,7 @@ class SchedulerSkelton
     with Logging {
 
   protected[this] var tasksRunning = 0
+  protected[this] var shuttingDown: Boolean = false
 
   def registered(
     driver: SchedulerDriver,
@@ -144,8 +145,8 @@ class SchedulerSkelton
     * reschedule any tasks launched on this slave on a new slave.
     */
   def slaveLost(
-                 driver: SchedulerDriver,
-                 slaveId: SlaveID): Unit = {
+    driver: SchedulerDriver,
+    slaveId: SlaveID): Unit = {
     log.info("Scheduler.slaveLost: [%s]" format slaveId.getValue)
   }
 
@@ -155,10 +156,10 @@ class SchedulerSkelton
     * generated.
     */
   def executorLost(
-                    driver: SchedulerDriver,
-                    executorId: ExecutorID,
-                    slaveId: SlaveID,
-                    status: Int): Unit = {
+    driver: SchedulerDriver,
+    executorId: ExecutorID,
+    slaveId: SlaveID,
+    status: Int): Unit = {
     log.info("Scheduler.executorLost: [%s]" format executorId.getValue)
   }
 
