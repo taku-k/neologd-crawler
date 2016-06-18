@@ -1,8 +1,6 @@
 import sys
 import threading
-from threading import Thread
-import time
-
+import redis
 import urlparse, urllib, sys
 from crawl import *
 from results import *
@@ -15,20 +13,33 @@ except ImportError:
     from mesos import Executor, MesosExecutorDriver, MesosSchedulerDriver, Scheduler
     import mesos_pb2
 
+VISITED_LINKS_KEY = "NEologd-NE:visited-links"
 
 class URLCrawlExecutor(Executor):
+    def __init__(self, redis_host='192.168.24.53', port=6379):
+        super(URLCrawlExecutor, self).__init__()
+
+        self.redis_host = redis_host
+        self.port = port
+
     def registered(self, driver, executorInfo, frameworkInfo, slaveInfo):
         print("CrawlExecutor registered")
+        self.conn_pool = redis.ConnectionPool(host=self.redis_host, port=self.port)
 
     def reregistered(self, driver, slaveInfo):
         print("CrawlExecutor reregistered")
+        self.conn_pool = None
+        self.conn_pool = redis.ConnectionPool(host=self.redis_host, port=self.port)
 
     def disconnected(self, driver):
         print("CrawlExecutor disconnected")
+        self.conn_pool = None
 
     def launchTask(self, driver, task):
         def run_task():
             print("Running URL crawl task %s" % task.task_id.value)
+
+            conn = redis.Redis(connection_pool=self.conn_pool)
 
             update = mesos_pb2.TaskStatus()
             update.task_id.value = task.task_id.value
@@ -62,6 +73,11 @@ class URLCrawlExecutor(Executor):
                 return
 
             # print("Get these links {}".format(links))
+
+            selected_links = []
+            for link in links:
+                if not conn.hexists(VISITED_LINKS_KEY, link):
+                    selected_links.append(link)
 
             res = UrlCrawlResult(
                 task.task_id.value,

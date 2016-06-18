@@ -14,9 +14,11 @@ import scala.collection.JavaConverters._
 trait Utils {
 
   def seedURL(): String
+  def redisHost(): String
+  def redisPort(): String
 
-  val TASK_CPUS = 0.1
-  val TASK_MEM = 32.0
+  val TASK_CPUS = 0.3
+  val TASK_MEM = 64.0
 
   lazy val seedURLHost: String = new java.net.URI(seedURL).getHost
 
@@ -48,7 +50,7 @@ trait Utils {
 
   lazy val extractExecutor: Protos.ExecutorInfo = {
     val command = Protos.CommandInfo.newBuilder
-      .setValue("python extract_executor.py")
+      .setValue(s"python extract_executor.py $redisHost $redisPort")
       .addAllUris(uris.asJava)
     Protos.ExecutorInfo.newBuilder
       .setExecutorId(Protos.ExecutorID.newBuilder.setValue("extract-executor"))
@@ -97,7 +99,14 @@ trait Utils {
       .setData(ByteString.copyFromUtf8(url))
       .build
 
-  def validateURL(url: String): Boolean = new java.net.URI(url).getHost == seedURLHost
+  def validateURL(url: String): Boolean =
+    try {
+      new java.net.URI(url).getHost == seedURLHost
+    }
+    catch {
+      case e: Exception =>
+        false
+    }
 
   def getMaxTasks(
     offer: Protos.Offer,

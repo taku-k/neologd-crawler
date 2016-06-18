@@ -39,18 +39,47 @@ object NeologdCrawler extends Logging {
     .setCheckpoint(false)
     .build
 
-  val scheduler = new NeologdCrawlerScheduler("http://www.what-myhome.net")
-
-  val driver = new MesosSchedulerDriver(
-    scheduler,
-    frameworkInfo,
-    mesosMaster
-  )
+  def printUsage(): Unit = {
+    println(
+      """
+        |Usage:
+        |  run <seed-url>
+      """.stripMargin)
+  }
 
   // Execution entry point
   def main(args: Array[String]): Unit = {
-    log.info("Start framework [{}]!", normalizedName)
-    log.info(mesosMaster)
+
+    if (args.length != 1) {
+      printUsage()
+      sys.exit(1)
+    }
+
+    val seedURL = args(0)
+
+    println(
+      s"""
+         |Start framework [$normalizedName]
+         |=======
+         |
+         |    seedURL: [$seedURL]
+         |mesosMaster: [$mesosMaster]
+         |  redisHost: [$redisHost]
+         |  redisPort: [$redisPort]
+         |
+       """.stripMargin)
+
+    val scheduler = new NeologdCrawlerScheduler(
+      seedURL,
+      redisHost,
+      redisPort)
+
+    val driver = new MesosSchedulerDriver(
+      scheduler,
+      frameworkInfo,
+      mesosMaster
+    )
+
     Future { driver.run }
 
     log.info("Please push [Ctrl-C] if you would stop this framework.")

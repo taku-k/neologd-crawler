@@ -2,6 +2,7 @@
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import urllib
+from crawl import CantReadException
 
 class ExtractFailedException(Exception):
     pass
@@ -39,9 +40,14 @@ def selector(url):
         ...
     ExtractFailedException
     """
+
+    try:
+        source = urllib.urlopen(url).read()
+    except:
+        raise CantReadException()
     try:
         host = urlparse(url).hostname
-        soup = BeautifulSoup(urllib.urlopen(url).read())
+        soup = BeautifulSoup(source)
         for pattern, func in HOST_PATTERN.items():
             if host == pattern:
                 return func(soup)

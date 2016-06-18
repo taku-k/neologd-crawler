@@ -5,6 +5,7 @@ from crawl import *
 from results import *
 from extract import *
 import redis
+from url_crawl_executor import VISITED_LINKS_KEY
 
 try:
     from mesos.native import MesosExecutorDriver, MesosSchedulerDriver
@@ -16,14 +17,15 @@ except ImportError:
 
 
 HASH_KEY = "NEologd-NE:dict"
-NEW_HASH_KEY = "NEologd-NE:new-dict-test"
+NEW_HASH_KEY = "NEologd-NE:new-dict"
 
 class ExtractExecutor(Executor):
-    def __init__(self, redis_host='10.141.141.10', port=6379):
+    def __init__(self, redis_host='localhost', port=6379):
         super(ExtractExecutor, self).__init__()
 
         self.redis_host = redis_host
         self.port = port
+        self.visited_redis = redis.StrictRedis(host="192.168.24.53", port=6379)
 
     def registered(self, driver, executorInfo, frameworkInfo, slaveInfo):
         print("CrawlExecutor registered")
@@ -55,7 +57,20 @@ class ExtractExecutor(Executor):
 
             try:
                 word, yomi = selector(url)
+            except CantReadException:
+                error_msg = "Could not read resource at %s" % url
+                update = mesos_pb2.TaskStatus()
+                update.task_id.value = task.task_id.value
+                update.state = mesos_pb2.TASK_FAILED
+                update.message = error_msg
+                update.data = url
+
+                driver.sendStatusUpdate(update)
+                print error_msg
+                return
             except ExtractFailedException:
+                self.visited_redis.hset(VISITED_LINKS_KEY, url, "VISITED")
+
                 error_msg = "Could not extract from given URL [{}]".format(url)
                 update = mesos_pb2.TaskStatus()
                 update.task_id.value = task.task_id.value
@@ -67,15 +82,15 @@ class ExtractExecutor(Executor):
                 return
 
             # print("Get these links {}".format(links))
-
-            if conn.hexists(HASH_KEY, word):
+            self.visited_redis.hset(VISITED_LINKS_KEY, url, "VISITED")
+            if conn.hexists(HASH_KEY, word) or conn.hexists(NEW_HASH_KEY, word):
                 msg = "Already registered this word %s" % word
                 update = mesos_pb2.TaskStatus()
                 update.task_id.value = task.task_id.value
                 update.state = mesos_pb2.TASK_FINISHED
                 update.message = msg
                 driver.sendStatusUpdate(update)
-                print(msg)
+                print(msg.encode('utf-8'))
                 return
             else:
                 conn.hset(NEW_HASH_KEY, word, yomi + "," + url)
@@ -115,5 +130,9 @@ class ExtractExecutor(Executor):
 
 if __name__ == "__main__":
     print("Starting Launching Executor (LE)")
-    driver = MesosExecutorDriver(ExtractExecutor())
+    if len(sys.argv) == 3:
+        redis_host, port = sys.argv[1:3]
+        driver = MesosExecutorDriver(ExtractExecutor(redis_host, int(port)))
+    else:
+        driver = MesosExecutorDriver(ExtractExecutor())
     sys.exit(0 if driver.run() == mesos_pb2.DRIVER_STOPPED else 1)
