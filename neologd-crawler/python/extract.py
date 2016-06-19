@@ -50,13 +50,21 @@ def aozora_extractor(soup):
         yomi = soup.find('table', summary='タイトルデータ').find_all('td')[3].string
     return [(word, yomi)]
 
+def honndana_extractor(soup):
+    pass
+
+def myoujijiten_extractor(soup):
+    return [(tr.find_all('td')[1], tr.find_all('td')[0]) for tr in soup.find_all('center')[2].find_all(
+        'tr')]
 
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
     "www.what-myhome.net": what_my_home_net_extractor,
     "wiki.ffo.jp": ff11_wiki_extractor,
     "www.aozora.gr.jp": aozora_extractor,
-    "ff14.ffo.jp": ff11_wiki_extractor
+    "ff14.ffo.jp": ff11_wiki_extractor,
+    "honndana.sakura.ne.jp": honndana_extractor,
+    "myoujijiten.web.fc2.com": myoujijiten_extractor
 }
 # ======= PATTERN IS END =======
 
