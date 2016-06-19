@@ -82,7 +82,8 @@ HOST_PATTERN = {
     "www.aozora.gr.jp": aozora_extractor,
     "ff14.ffo.jp": ff11_wiki_extractor,
     "honndana.sakura.ne.jp": honndana_extractor,
-    "myoujijiten.web.fc2.com": myoujijiten_extractor
+    "myoujijiten.web.fc2.com": myoujijiten_extractor,
+    'yozora.kazumi386.org': aozora_extractor
 }
 # ======= PATTERN IS END =======
 
