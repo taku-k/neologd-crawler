@@ -54,7 +54,7 @@ def honndana_extractor(soup):
     pass
 
 def myoujijiten_extractor(soup):
-    return [(tr.find_all('td')[1], tr.find_all('td')[0]) for tr in soup.find_all('center')[2].find_all(
+    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in soup.find_all('center')[2].find_all(
         'tr')]
 
 # ======= PATTERN IS HERE =======
