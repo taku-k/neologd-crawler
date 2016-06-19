@@ -67,10 +67,13 @@ def myoujijiten_extractor(soup):
     >>> url = "http://myoujijiten.web.fc2.com/a1.html"
     >>> soup = BeautifulSoup(urllib.urlopen(url).read())
     >>> myoujijiten_extractor(soup)
-
     """
     trs = soup.find('table', width='1000').find_all('tr')
-    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in trs]
+    ret = []
+    for tr in trs:
+        if not tr.find_all('td')[1].string and not tr.find_all('td')[0].string:
+            ret += [(tr.find_all('td')[1].string, tr.find_all('td')[0].string)]
+    return ret
 
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
