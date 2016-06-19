@@ -63,16 +63,14 @@ def myoujijiten_extractor(soup):
     >>> myoujijiten_extractor(soup)
     Traceback (most recent call last):
         ...
-    ExtractFailedException
+    AttributeError: 'NoneType' object has no attribute 'find_all'
     >>> url = "http://myoujijiten.web.fc2.com/a1.html"
     >>> soup = BeautifulSoup(urllib.urlopen(url).read())
     >>> myoujijiten_extractor(soup)
 
     """
-    centers = soup.find_all('center')[2].find_all('tr')
-    if len(centers[0].find_all('td')) != 5:
-        raise ExtractFailedException()
-    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in centers]
+    trs = soup.find('table', width='1000').find_all('tr')
+    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in trs]
 
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
