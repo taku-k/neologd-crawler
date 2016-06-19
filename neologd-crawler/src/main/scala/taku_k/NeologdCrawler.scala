@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object NeologdCrawler extends Logging {
 
   val defaultSettings = ConfigFactory.parseString("""
+    home = "/home/vagrant/hostfiles"
     mesos {
       master = "127.0.1.1:5050"
     }
@@ -26,6 +27,7 @@ object NeologdCrawler extends Logging {
 
   val normalizedName = "neologd-crawler"
   val failoverTimeout = 600000 // in milliseconds (10 minutes)
+  val home = config.getString("home")
   val mesosMaster = config.getString("mesos.master")
   val redisHost = config.getString("redis.host")
   val redisPort = config.getString("redis.port")
@@ -62,6 +64,7 @@ object NeologdCrawler extends Logging {
          |Start framework [$normalizedName]
          |=======
          |
+         |       home: [$home]
          |    seedURL: [$seedURL]
          |mesosMaster: [$mesosMaster]
          |  redisHost: [$redisHost]
@@ -70,6 +73,7 @@ object NeologdCrawler extends Logging {
        """.stripMargin)
 
     val scheduler = new NeologdCrawlerScheduler(
+      home,
       seedURL,
       redisHost,
       redisPort)

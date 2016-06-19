@@ -33,17 +33,16 @@ class ExtractResult(Result):
     >>> res = ExtractResult(
     ...     "1234",
     ...     "http://example.com",
-    ...     '債権者集会',
-    ...     'さいけんしゃしゅうかい'
+    ...     [{"word": '債権者集会',
+    ...       "yomi": 'さいけんしゃしゅうかい'}]
     ... )
     >>> repr(res)
-    '{"taskId": "1234", "url": "http://example.com", "word": "\\\\u50b5\\\\u6a29\\\\u8005\\\\u96c6\\\\u4f1a", "yomi": "\\\\u3055\\\\u3044\\\\u3051\\\\u3093\\\\u3057\\\\u3083\\\\u3057\\\\u3085\\\\u3046\\\\u304b\\\\u3044"}'
+    '{"new_words": [{"word": "\\\\u50b5\\\\u6a29\\\\u8005\\\\u96c6\\\\u4f1a", "yomi": "\\\\u3055\\\\u3044\\\\u3051\\\\u3093\\\\u3057\\\\u3083\\\\u3057\\\\u3085\\\\u3046\\\\u304b\\\\u3044"}], "taskId": "1234", "url": "http://example.com"}'
     """
-    def __init__(self, taskId, url, word, yomi):
+    def __init__(self, taskId, url, new_words):
         self.taskId = taskId
         self.url = url
-        self.word = word
-        self.yomi = yomi
+        self.new_words = new_words
 
 if __name__ == '__main__':
     import doctest

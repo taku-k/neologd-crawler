@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NeologdCrawlerScheduler(val seedURL: String, val redisHost: String, val redisPort: String)
+class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHost: String, val redisPort: String)
     extends SchedulerSkelton
     with Utils
     with ResultProtocol {
@@ -88,12 +88,13 @@ class NeologdCrawlerScheduler(val seedURL: String, val redisHost: String, val re
       case id if id == extractExecutor.getExecutorId.getValue =>
         val result = try {
           Json.parse(jsonString).as[ExtractResult]
-        } catch {
+        }
+        catch {
           case _ => ""
         }
-          log.info(s"Get word [$result]")
-        }
+        log.info(s"Get word [$result]")
     }
+
   }
 
 }

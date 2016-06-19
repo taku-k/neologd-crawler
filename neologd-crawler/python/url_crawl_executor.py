@@ -16,7 +16,7 @@ except ImportError:
 VISITED_LINKS_KEY = "NEologd-NE:visited-links"
 
 class URLCrawlExecutor(Executor):
-    def __init__(self, redis_host='192.168.24.53', port=6379):
+    def __init__(self, redis_host='localhost', port=6379):
         super(URLCrawlExecutor, self).__init__()
 
         self.redis_host = redis_host
@@ -113,5 +113,9 @@ class URLCrawlExecutor(Executor):
 
 if __name__ == "__main__":
     print("Starting Launching Executor (LE)")
-    driver = MesosExecutorDriver(URLCrawlExecutor())
+    if len(sys.argv) == 3:
+        redis_host, port = sys.argv[1:3]
+        driver = MesosExecutorDriver(URLCrawlExecutor(redis_host, int(port)))
+    else:
+        driver = MesosExecutorDriver(URLCrawlExecutor())
     sys.exit(0 if driver.run() == mesos_pb2.DRIVER_STOPPED else 1)

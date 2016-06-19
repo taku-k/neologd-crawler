@@ -22,10 +22,8 @@ NEW_HASH_KEY = "NEologd-NE:new-dict"
 class ExtractExecutor(Executor):
     def __init__(self, redis_host='localhost', port=6379):
         super(ExtractExecutor, self).__init__()
-
         self.redis_host = redis_host
         self.port = port
-        self.visited_redis = redis.StrictRedis(host="192.168.24.53", port=6379)
 
     def registered(self, driver, executorInfo, frameworkInfo, slaveInfo):
         print("CrawlExecutor registered")
@@ -56,7 +54,7 @@ class ExtractExecutor(Executor):
             url = task.data
 
             try:
-                word, yomi = selector(url)
+                words_list = selector(url)
             except CantReadException:
                 error_msg = "Could not read resource at %s" % url
                 update = mesos_pb2.TaskStatus()
@@ -69,7 +67,7 @@ class ExtractExecutor(Executor):
                 print error_msg
                 return
             except ExtractFailedException:
-                self.visited_redis.hset(VISITED_LINKS_KEY, url, "VISITED")
+                conn.hset(VISITED_LINKS_KEY, url, "VISITED")
 
                 error_msg = "Could not extract from given URL [{}]".format(url)
                 update = mesos_pb2.TaskStatus()
@@ -82,9 +80,18 @@ class ExtractExecutor(Executor):
                 return
 
             # print("Get these links {}".format(links))
-            self.visited_redis.hset(VISITED_LINKS_KEY, url, "VISITED")
-            if conn.hexists(HASH_KEY, word) or conn.hexists(NEW_HASH_KEY, word):
-                msg = "Already registered this word %s" % word
+            conn.hset(VISITED_LINKS_KEY, url, "VISITED")
+            already_exists = []
+            new_words = []
+            for word, yomi in words_list:
+                if conn.hexists(HASH_KEY, word) or conn.hexists(NEW_HASH_KEY, word):
+                    already_exists.append(word)
+                else:
+                    conn.hset(NEW_HASH_KEY, word, yomi + "," + url)
+                    new_words.append({"word": word, "yomi": yomi})
+
+            if already_exists:
+                msg = "Already registered this word {}".format(",".join([_.encode('utf-8') for _ in already_exists]))
                 update = mesos_pb2.TaskStatus()
                 update.task_id.value = task.task_id.value
                 update.state = mesos_pb2.TASK_FINISHED
@@ -92,14 +99,11 @@ class ExtractExecutor(Executor):
                 driver.sendStatusUpdate(update)
                 print(msg.encode('utf-8'))
                 return
-            else:
-                conn.hset(NEW_HASH_KEY, word, yomi + "," + url)
 
             res = ExtractResult(
                 task.task_id.value,
                 url,
-                word,
-                yomi
+                new_words
             )
             message = repr(res)
             driver.sendFrameworkMessage(message)

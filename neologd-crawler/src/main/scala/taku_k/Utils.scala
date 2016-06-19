@@ -13,11 +13,12 @@ import scala.collection.JavaConverters._
   */
 trait Utils {
 
+  def home(): String
   def seedURL(): String
   def redisHost(): String
   def redisPort(): String
 
-  val TASK_CPUS = 0.3
+  val TASK_CPUS = 0.2
   val TASK_MEM = 64.0
 
   lazy val seedURLHost: String = new java.net.URI(seedURL).getHost
@@ -32,14 +33,14 @@ trait Utils {
     ).map {
         file =>
           Protos.CommandInfo.URI.newBuilder
-            .setValue(new File("/home/vagrant/hostfiles", file).getAbsolutePath)
+            .setValue(new File(home, file).getAbsolutePath)
             .setExtract(false)
             .build
       }
 
   lazy val urlCrawlExecutor: Protos.ExecutorInfo = {
     val command = Protos.CommandInfo.newBuilder
-      .setValue("python url_crawl_executor.py")
+      .setValue(s"python url_crawl_executor.py $redisHost $redisPort")
       .addAllUris(uris.asJava)
     Protos.ExecutorInfo.newBuilder
       .setExecutorId(Protos.ExecutorID.newBuilder.setValue("url-crawl-executor"))
