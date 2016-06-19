@@ -54,8 +54,25 @@ def honndana_extractor(soup):
     pass
 
 def myoujijiten_extractor(soup):
-    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in soup.find_all('center')[2].find_all(
-        'tr')]
+    """
+
+    :param soup:
+    :return:
+    >>> url = 'http://myoujijiten.web.fc2.com/hiroshima.htm'
+    >>> soup = BeautifulSoup(urllib.urlopen(url).read())
+    >>> myoujijiten_extractor(soup)
+    Traceback (most recent call last):
+        ...
+    ExtractFailedException
+    >>> url = "http://myoujijiten.web.fc2.com/a1.html"
+    >>> soup = BeautifulSoup(urllib.urlopen(url).read())
+    >>> myoujijiten_extractor(soup)
+
+    """
+    centers = soup.find_all('center')[2].find_all('tr')
+    if len(centers[0].find_all('td')) != 5:
+        raise ExtractFailedException()
+    return [(tr.find_all('td')[1].string, tr.find_all('td')[0].string) for tr in centers]
 
 # ======= PATTERN IS HERE =======
 HOST_PATTERN = {
