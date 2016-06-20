@@ -21,7 +21,7 @@ def url_crawl(url):
     try:
         for item in soup.find_all('a'):
             try:
-                links.append(urlparse.urljoin(url, urllib.quote(item.get('href'))))
+                links.append(urlparse.urljoin(url, item.get('href')))
             except:
                 pass # Not a valid link
     except:

@@ -69,7 +69,8 @@ object NeologdCrawlerBuild extends Build {
       "org.slf4j"        % "slf4j-api"       % SLF4J_VERSION,
       "ch.qos.logback"   % "logback-classic" % LOGBACK_VERSION % "runtime",
       "org.scalatest"   %% "scalatest"       % SCALATEST_VERSION % "test",
-      "com.typesafe.play" %% "play-json" % PLAY_JSON_VERSION
+      "com.typesafe.play" %% "play-json" % PLAY_JSON_VERSION,
+      "net.debasishg" %% "redisclient" % "3.0"
     ),
 
     scalacOptions in Compile ++= Seq(

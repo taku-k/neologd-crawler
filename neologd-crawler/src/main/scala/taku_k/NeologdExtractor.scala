@@ -1,7 +1,6 @@
 package taku_k
 
-import taku_k.scheduler.NeologdCrawlerScheduler
-//import taku_k.executor.NeologdCrawlerExecutor
+import taku_k.scheduler.ExtractScheduler
 
 import com.typesafe.config.{ Config, ConfigFactory }
 import org.apache.mesos.{ MesosSchedulerDriver }
@@ -10,7 +9,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object NeologdCrawler extends Logging {
+object NeologdExtractor extends Logging {
 
   val defaultSettings = ConfigFactory.parseString("""
     home = "/home/vagrant/hostfiles"
@@ -21,11 +20,11 @@ object NeologdCrawler extends Logging {
       host = "localhost"
       port = "6379"
     }
-  """)
+                                                  """)
 
   val config = ConfigFactory.load.getConfig("taku_k").withFallback(defaultSettings)
 
-  val normalizedName = "neologd-crawler"
+  val normalizedName = "neologd-extractor"
   val failoverTimeout = 600000 // in milliseconds (10 minutes)
   val home = config.getString("home")
   val mesosMaster = config.getString("mesos.master")
@@ -45,25 +44,12 @@ object NeologdCrawler extends Logging {
     println(
       """
         |Usage:
-        |  run <seed-url>
+        |  run
       """.stripMargin)
   }
 
   // Execution entry point
   def main(args: Array[String]): Unit = {
-
-    if (args.length == 0) {
-      printUsage()
-      sys.exit(1)
-    }
-
-    val seedURL = args(0)
-    val depth = if (args.length == 2) {
-      args(1).toInt
-    }
-    else {
-      -1
-    }
 
     println(
       s"""
@@ -71,20 +57,16 @@ object NeologdCrawler extends Logging {
          |=======
          |
          |       home: [$home]
-         |    seedURL: [$seedURL]
-         |      depth: [$depth]
          |mesosMaster: [$mesosMaster]
          |  redisHost: [$redisHost]
          |  redisPort: [$redisPort]
          |
        """.stripMargin)
 
-    val scheduler = new NeologdCrawlerScheduler(
+    val scheduler = new ExtractScheduler(
       home,
-      seedURL,
       redisHost,
-      redisPort,
-      depth)
+      redisPort)
 
     val driver = new MesosSchedulerDriver(
       scheduler,

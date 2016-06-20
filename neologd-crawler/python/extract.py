@@ -51,7 +51,9 @@ def aozora_extractor(soup):
     return [(word, yomi)]
 
 def honndana_extractor(soup):
-    pass
+    word = soup.find('b').find_all('font')[0].string
+    yomi = soup.find('b').find_all('font')[1].string[1:-1]
+    return [(word, yomi)]
 
 def myoujijiten_extractor(soup):
     """
@@ -83,7 +85,6 @@ HOST_PATTERN = {
     "ff14.ffo.jp": ff11_wiki_extractor,
     "honndana.sakura.ne.jp": honndana_extractor,
     "myoujijiten.web.fc2.com": myoujijiten_extractor,
-    'yozora.kazumi386.org': aozora_extractor
 }
 # ======= PATTERN IS END =======
 

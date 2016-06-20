@@ -12,22 +12,26 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.Duration
 import scala.util.Try
 import org.apache.mesos.Protos
+import com.redis._
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHost: String, val redisPort: String, val depth: Int)
+class ExtractScheduler(val home: String, val redisHost: String, val redisPort: String)
     extends SchedulerSkelton
     with Utils
     with ResultProtocol {
 
+  private[this] val EXTRACT_KEY = "NEologd-NE:extract-url-list"
+
+  private[this] val r = new RedisClient(redisHost, redisPort.toInt)
+  val seedURL = ""
   private[this] val crawlQueue = mutable.Queue[String](seedURL)
   private[this] val extractQueue = mutable.Queue[String]()
   private[this] val processedURLs = mutable.Set[String]()
   private[this] var tasksCreated = 0
-  private[this] var cur_depth = 0
 
   override def resourceOffers(
     driver: SchedulerDriver,
@@ -42,15 +46,9 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
 
       val tasks = mutable.Buffer[Protos.TaskInfo]()
 
-      0 until (maxTasks / 2) foreach (_ => {
-        if (crawlQueue.nonEmpty && cur_depth != 1) {
-          val url = crawlQueue.dequeue
-          tasks += makeURLCrawlTask(s"$tasksCreated", url, offer)
-          tasksCreated += 1
-          cur_depth = 1
-        }
-        if (extractQueue.nonEmpty) {
-          val url = extractQueue.dequeue
+      0 until maxTasks foreach (_ => {
+        if (r.llen(EXTRACT_KEY).getOrElse(0) != 0) {
+          val url = r.lpop().get
           tasks += makeExtractTask(s"$tasksCreated", url, offer)
           tasksCreated += 1
         }
@@ -75,19 +73,6 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
     val jsonString = new String(data, Charset.forName("UTF-8"))
 
     executorId.getValue match {
-      case id if id == urlCrawlExecutor.getExecutorId.getValue =>
-        val result = Json.parse(jsonString).as[UrlCrawlResult]
-        result.links.foreach { (link: String) =>
-          {
-            if (validateURL(link) && !processedURLs.contains(link)) {
-              //              println(s"Enqueueing [$link]")
-              processedURLs += link
-              crawlQueue += link
-              extractQueue += link
-            }
-          }
-        }
-
       case id if id == extractExecutor.getExecutorId.getValue =>
         val result = try {
           Json.parse(jsonString).as[ExtractResult]
