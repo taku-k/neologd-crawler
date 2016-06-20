@@ -27,7 +27,10 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
   private[this] val extractQueue = mutable.Queue[String]()
   private[this] val processedURLs = mutable.Set[String]()
   private[this] var tasksCreated = 0
-  private[this] var cur_depth = 0
+
+  private[this] var crawlPoint = 1
+  private[this] var prev = ""
+  private[this] var extractPoint = 1
 
   override def resourceOffers(
     driver: SchedulerDriver,
@@ -42,13 +45,22 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
 
       val tasks = mutable.Buffer[Protos.TaskInfo]()
 
-      0 until (maxTasks / 2) foreach (_ => {
-        if (crawlQueue.nonEmpty && cur_depth != 1) {
+      var numCrawlTask = (maxTasks * crawlPoint / (crawlPoint + extractPoint))
+      var numExtractTask = (maxTasks * extractPoint / (crawlPoint + extractPoint))
+      if (numCrawlTask == 0) {
+        numCrawlTask = 1
+        numExtractTask -= 1
+      }
+      log.info(s"numCrawlTask = $numCrawlTask, numExtractTask = $numExtractTask")
+
+      0 until numCrawlTask foreach (_ => {
+        if (crawlQueue.nonEmpty) {
           val url = crawlQueue.dequeue
           tasks += makeURLCrawlTask(s"$tasksCreated", url, offer)
           tasksCreated += 1
-          cur_depth = 1
         }
+      })
+      0 until numExtractTask foreach (_ => {
         if (extractQueue.nonEmpty) {
           val url = extractQueue.dequeue
           tasks += makeExtractTask(s"$tasksCreated", url, offer)
@@ -76,6 +88,13 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
 
     executorId.getValue match {
       case id if id == urlCrawlExecutor.getExecutorId.getValue =>
+        if (prev == "crawl") {
+          extractPoint += 1
+        }
+        else {
+          extractPoint = math.max(1, extractPoint - 1)
+        }
+        prev = "crawl"
         val result = Json.parse(jsonString).as[UrlCrawlResult]
         result.links.foreach { (link: String) =>
           {
@@ -89,6 +108,13 @@ class NeologdCrawlerScheduler(val home: String, val seedURL: String, val redisHo
         }
 
       case id if id == extractExecutor.getExecutorId.getValue =>
+        if (prev == "extract") {
+          crawlPoint += 1
+        }
+        else {
+          crawlPoint = math.max(1, crawlPoint - 1)
+        }
+        prev = "extract"
         val result = try {
           Json.parse(jsonString).as[ExtractResult]
         }
