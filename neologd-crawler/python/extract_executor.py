@@ -91,13 +91,13 @@ class ExtractExecutor(Executor):
                     new_words.append({"word": word, "yomi": yomi})
 
             if already_exists:
-                msg = "Already registered this word {}".format(",".join([_.encode('utf-8') for _ in already_exists]))
+                msg = "Already registered this word"
                 update = mesos_pb2.TaskStatus()
                 update.task_id.value = task.task_id.value
                 update.state = mesos_pb2.TASK_FINISHED
                 update.message = msg
                 driver.sendStatusUpdate(update)
-                print(msg.encode('utf-8'))
+                print(msg)
                 return
 
             res = ExtractResult(
